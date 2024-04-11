@@ -1,0 +1,39 @@
+# Namespacer
+:ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
+
+This gem is a simple library to namespace your classes and modules in Ruby. It is useful when you want to avoid naming conflicts between different libraries or parts of your application.
+
+An executable is included to help you namespace your project files.
+
+## Installation
+
+[source,sh]
+----
+gem install namespacer-rb
+----
+
+## Usage
+
+`namespacer --help` will show you the available options.
+
+### Namespacing a file
+
+`namespacer MyNamespace my_file.rb` will create a new file `my_file.namespaced.rb` with all top-level classes and modules namespaced under `MyNamespace`.
+
+## Development
+
+After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+
+To install this gem onto your local machine, run `bundle exec rake install`. To release a new version,
+update the version number in `version.rb` (`gem bump` can do this), and then run `bundle exec rake release`.
+This will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to https://rubygems.org[rubygems.org].
+
+## Contributing
+
+Bug reports and pull requests are welcome on GitHub at https://github.com/rubyists/namespacer.
