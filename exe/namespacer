@@ -9,7 +9,8 @@ require 'tty-command'
 module Rubyists
   # Namespace for the namespacer CLI
   module Namespacer
-    CliOptions = Struct.new(:recursive, :verbose, :in_place, :fail_rubocop_silently, :allow_text_files)
+    CLI_OPTS = %i[recursive verbose in_place fail_rubocop_silently allow_text_files dry_run].freeze
+    CliOptions = Struct.new(*CLI_OPTS)
     def self.cli_options
       @cli_options ||= CliOptions.new(verbose: false, recursive: false, in_place: false)
     end
@@ -32,6 +33,8 @@ parser = OptionParser.new do |opts|
   opts.on('-r', '--recursive', 'Recursively namespace all files in PATH') { |_| options.recursive = true }
 
   opts.on('-i', '--in-place', 'Modify files in-place') { |_| options.in_place = true }
+
+  opts.on('-d', '--dry-run', 'Dry run, do not write files') { |_| options.dry_run = true }
 
   opts.on('-a', '--allow-text-files', 'Allow non-ruby mime types, so long as they are text') do |_|
     options.allow_text_files = true
@@ -114,7 +117,7 @@ def rubocop_friendly?(path)
   return true if mime.include?('text/x-ruby')
   return true if mime.split('/').first == 'text' && opts.allow_text_files
 
-  warn "File #{path} is not a Ruby file (#{mime})" if opts.verbose
+  warn "File #{path} is not a Ruby file (#{mime}), consider -a" if opts.verbose
   false
 end
 
@@ -127,8 +130,12 @@ def log_namespace(namespace, write_path)
   warn msg
 end
 
+def valid_file?(path)
+  !excluded_path?(path) && rubocop_friendly?(path)
+end
+
 def namespace_file(namespace, path)
-  return unless rubocop_friendly?(path)
+  return unless valid_file?(path)
 
   opts = Rubyists::Namespacer.cli_options
   namespaced = Rubyists::Namespacer.namespace!(path.read, namespace)
@@ -139,16 +146,20 @@ def namespace_file(namespace, path)
   write_path.write(cmd.out)
 end
 
+def excluded_path?(path)
+  return true if path.directory?
+  return true if path.basename.to_s.start_with?('.')
+  return true if path.basename.to_s.end_with?('_namespaced')
+  return true if path.basename.to_s.match?(/_namespaced\.[^\.]+$/)
+
+  false
+end
+
 paths.each do |path|
   case path
   when ->(p) { p.directory? }
     if options.recursive
       path.find do |f|
-        next if f.directory?
-        next if f.basename.to_s.start_with?('.')
-        next if f.basename.to_s.end_with?('.namespaced')
-        next if f.basename.to_s.end_with?('.namespaced.rb')
-
         namespace_file(namespace, f)
       end
     else
