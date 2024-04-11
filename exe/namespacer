@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require 'filemagic'
 require 'namespacer'
 require 'optparse'
 require 'pathname'
@@ -14,7 +15,11 @@ module Rubyists
     end
 
     def self.cmd
-      @cmd = TTY::Command.new printer: :null
+      @cmd ||= TTY::Command.new printer: :null
+    end
+
+    def self.magic
+      @magic ||= FileMagic.new(FileMagic::MAGIC_MIME)
     end
   end
 end
@@ -98,18 +103,31 @@ def rubocop_cmd(path, ruby_code) # rubocop:disable Metrics/MethodLength
   result
 end
 
-def namespace_file(namespace, path) # rubocop:disable Metrics/MethodLength
+def rubocop_friendly?(path)
+  magic = Rubyists::Namespacer.magic
+  mime = magic.file(path.to_s)
+  return true if mime.include?('text/x-ruby')
+
+  warn "File #{path} is not a Ruby file (#{mime})"
+  false
+end
+
+def log_namespace(namespace, write_path, opts)
+  return unless opts.verbose
+
+  msg = "Namespacing #{write_path} with #{namespace}"
+  msg << ' (in-place)' if opts.in_place
+  warn msg
+end
+
+def namespace_file(namespace, path)
+  return unless rubocop_friendly?(path)
+
   opts = Rubyists::Namespacer.cli_options
   namespaced = Rubyists::Namespacer.namespace!(path.read, namespace)
   write_path = opts.in_place ? path : new_path(path)
-  if opts.verbose
-    msg = "Namespacing #{write_path} with #{namespace}"
-    msg << ' (in-place)' if opts.in_place
-    warn msg
-  end
+  log_namespace namespace, write_path, opts
   cmd = rubocop_cmd(write_path, namespaced)
-  return unless cmd&.success?
-
   warn "Writing namespaced file to #{write_path}" if opts.verbose
   write_path.write(cmd.out)
 end
