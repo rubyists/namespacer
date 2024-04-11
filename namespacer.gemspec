@@ -32,6 +32,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'parser', '~> 3'
+  spec.add_dependency 'rubocop', '~> 1.21'
   spec.add_dependency 'ruby-filemagic', '~> 0.7'
   spec.add_dependency 'tty-command', '~> 0.10'
   spec.add_dependency 'unparser', '~> 0.6'
