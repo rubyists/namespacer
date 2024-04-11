@@ -69,7 +69,7 @@ def new_path(path)
   dir.join("#{base}.namespaced#{ext}")
 end
 
-def namespace_file(namespace, path)
+def namespace_file(namespace, path) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
   namespaced = Rubyists::Namespacer.namespace!(path.read, namespace)
   write_path = Rubyists::Namespacer.cli_options.in_place ? path : new_path(path)
   if Rubyists::Namespacer.cli_options.verbose
@@ -77,8 +77,14 @@ def namespace_file(namespace, path)
     msg << ' (in-place)' if Rubyists::Namespacer.cli_options.in_place
     warn msg
   end
-  write_path.write(namespaced)
-  Rubyists::Namespacer.cmd.run(:rubocop, '-A', write_path.to_s)
+  cmd = Rubyists::Namespacer.cmd.run(:rubocop,
+                                     '-A',
+                                     '--stdin',
+                                     write_path.basename.to_s,
+                                     '--stderr',
+                                     input: namespaced,
+                                     only_output_on_error: true)
+  write_path.write(cmd.out)
 end
 
 paths.each do |path|
