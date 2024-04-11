@@ -25,6 +25,7 @@ gem install namespacer-rb
 ### Namespacing a file
 
 `namespacer MyNamespace my_file.rb` will create a new file `my_file.namespaced.rb` with all top-level classes and modules namespaced under `MyNamespace`.
+`namespacer -i MyNamespace my_file.rb` will overwrite the original file with the namespaced version.
 
 ## Development
 
