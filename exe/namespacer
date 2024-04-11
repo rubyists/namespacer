@@ -108,11 +108,12 @@ def rubocop_friendly?(path)
   mime = magic.file(path.to_s)
   return true if mime.include?('text/x-ruby')
 
-  warn "File #{path} is not a Ruby file (#{mime})"
+  warn "File #{path} is not a Ruby file (#{mime})" if Rubyists::Namespacer.cli_options.verbose
   false
 end
 
-def log_namespace(namespace, write_path, opts)
+def log_namespace(namespace, write_path)
+  opts = Rubyists::Namespacer.cli_options
   return unless opts.verbose
 
   msg = "Namespacing #{write_path} with #{namespace}"
@@ -126,7 +127,7 @@ def namespace_file(namespace, path)
   opts = Rubyists::Namespacer.cli_options
   namespaced = Rubyists::Namespacer.namespace!(path.read, namespace)
   write_path = opts.in_place ? path : new_path(path)
-  log_namespace namespace, write_path, opts
+  log_namespace namespace, write_path
   cmd = rubocop_cmd(write_path, namespaced)
   warn "Writing namespaced file to #{write_path}" if opts.verbose
   write_path.write(cmd.out)
