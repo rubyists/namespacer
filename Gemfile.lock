@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    namespacer-rb (0.1.7)
+    namespacer-rb (0.1.8)
       parser (~> 3)
       rubocop (~> 1.21)
       ruby-filemagic (~> 0.7)
