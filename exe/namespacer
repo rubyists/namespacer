@@ -9,7 +9,7 @@ require 'tty-command'
 module Rubyists
   # Namespace for the namespacer CLI
   module Namespacer
-    CliOptions = Struct.new(:recursive, :verbose, :in_place, :fail_rubocop_silently)
+    CliOptions = Struct.new(:recursive, :verbose, :in_place, :fail_rubocop_silently, :allow_text_files)
     def self.cli_options
       @cli_options ||= CliOptions.new(verbose: false, recursive: false, in_place: false)
     end
@@ -32,6 +32,10 @@ parser = OptionParser.new do |opts|
   opts.on('-r', '--recursive', 'Recursively namespace all files in PATH') { |_| options.recursive = true }
 
   opts.on('-i', '--in-place', 'Modify files in-place') { |_| options.in_place = true }
+
+  opts.on('-a', '--allow-text-files', 'Allow non-ruby mime types, so long as they are text') do |_|
+    options.allow_text_files = true
+  end
 
   opts.on('-f', '--fail-rubocop-silently', 'Write files even if they are not rubocop-friendly') do |_|
     options.fail_rubocop_silently = true
@@ -80,7 +84,7 @@ def new_path(path)
   dir = path.dirname
   ext = path.extname
   base = path.basename(ext.to_s)
-  dir.join("#{base}.namespaced#{ext}")
+  dir.join("#{base}_namespaced#{ext}")
 end
 
 def rubocop_cmd(path, ruby_code) # rubocop:disable Metrics/MethodLength
@@ -104,11 +108,13 @@ def rubocop_cmd(path, ruby_code) # rubocop:disable Metrics/MethodLength
 end
 
 def rubocop_friendly?(path)
+  opts = Rubyists::Namespacer.cli_options
   magic = Rubyists::Namespacer.magic
   mime = magic.file(path.to_s)
   return true if mime.include?('text/x-ruby')
+  return true if mime.split('/').first == 'text' && opts.allow_text_files
 
-  warn "File #{path} is not a Ruby file (#{mime})" if Rubyists::Namespacer.cli_options.verbose
+  warn "File #{path} is not a Ruby file (#{mime})" if opts.verbose
   false
 end
 
