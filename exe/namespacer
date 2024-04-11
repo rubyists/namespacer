@@ -28,6 +28,11 @@ parser = OptionParser.new do |opts|
 
   opts.on('-i', '--in-place', 'Modify files in-place') { |_| options.in_place = true }
 
+  opts.on('-V', '--version', 'Print version') do
+    puts "namespacer #{Rubyists::Namespacer::VERSION}"
+    exit
+  end
+
   opts.on('-v', '--verbose', 'Verbose output') do
     options.verbose = true
   end
