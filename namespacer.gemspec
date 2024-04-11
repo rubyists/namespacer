@@ -3,7 +3,7 @@
 require_relative 'lib/namespacer/version'
 
 Gem::Specification.new do |spec|
-  spec.name = 'namespacer'
+  spec.name = 'namespacer-rb'
   spec.version = Rubyists::Namespacer::VERSION
   spec.authors = ['Tj (bougyman) Vanderpoel']
   spec.email = ['tj@rubyists.com']
