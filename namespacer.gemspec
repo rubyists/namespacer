@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary = 'Namespace classes and modules in existing ruby source code.'
   spec.description = 'For those times you realize you should have namespaced your class(es) or module(s).'
   spec.homepage = 'https://github.com/rubyists/namespacer'
-  spec.required_ruby_version = '>= 2.6.0'
+  spec.required_ruby_version = '~> 3.3'
 
   spec.metadata['allowed_push_host'] = 'https://rubygems.org'
 
