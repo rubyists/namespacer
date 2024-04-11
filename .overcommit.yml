@@ -2,3 +2,10 @@
 PreCommit:
   RuboCop:
     enabled: true
+  BundleAudit:
+    enabled: true
+  BundleCheck:
+    enabled: true
+  BundleOutdated:
+    enabled: true
+
