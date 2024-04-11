@@ -1,0 +1,105 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'namespacer'
+require 'optparse'
+require 'pathname'
+require 'tty-command'
+module Rubyists
+  # Namespace for the namespacer CLI
+  module Namespacer
+    CliOptions = Struct.new(:recursive, :verbose, :in_place)
+    def self.cli_options
+      @cli_options ||= CliOptions.new(verbose: false, recursive: false, in_place: false)
+    end
+
+    def self.cmd
+      @cmd = TTY::Command.new
+    end
+  end
+end
+
+options = Rubyists::Namespacer.cli_options
+
+parser = OptionParser.new do |opts|
+  opts.banner = 'Usage: namespacer [options] NAMESPACE PATHS'
+
+  opts.on('-r', '--recursive', 'Recursively namespace all files in PATH') { |_| options.recursive = true }
+
+  opts.on('-i', '--in-place', 'Modify files in-place') { |_| options.in_place = true }
+
+  opts.on('-v', '--verbose', 'Verbose output') do
+    options.verbose = true
+  end
+end
+parser.parse!
+
+namespace, paths = ARGV
+
+if namespace.nil?
+  warn 'No namespace supplied'
+  warn parser
+  exit 1
+end
+
+if paths.nil?
+  warn 'No paths supplied'
+  warn parser
+  exit 2
+end
+paths = Array(paths) unless paths.is_a?(Array)
+
+paths.map! do |path|
+  p = Pathname(path)
+  unless p.exist?
+    warn "Path #{p} does not exist"
+    exit 3
+  end
+  unless options.recursive || p.file?
+    warn "Path #{p} is not a file (use -r to recursively namespace files)"
+    exit 4
+  end
+  p
+end
+
+def new_path(path)
+  dir = path.dirname
+  ext = path.extname
+  base = path.basename(ext.to_s)
+  dir.join("#{base}.namespaced#{ext}")
+end
+
+def namespace_file(namespace, path)
+  namespaced = Rubyists::Namespacer.namespace!(path.read, namespace)
+  write_path = Rubyists::Namespacer.cli_options.in_place ? path : new_path(path)
+  if Rubyists::Namespacer.cli_options.verbose
+    msg = "Namespacing #{write_path} with #{namespace}"
+    msg << ' (in-place)' if Rubyists::Namespacer.cli_options.in_place
+    warn msg
+  end
+  write_path.write(namespaced)
+  Rubyists::Namespacer.cmd.run(:rubocop, '-A', write_path.to_s)
+end
+
+paths.each do |path|
+  case path
+  when ->(p) { p.directory? }
+    if options.recursive
+      path.find do |f|
+        next if f.directory?
+        next if f.basename.to_s.start_with?('.')
+        next if f.basename.to_s.end_with?('.namespaced')
+        next if f.basename.to_s.end_with?('.namespaced.rb')
+
+        namespace_file(namespace, f)
+      end
+    else
+      warn "Path #{path} is a directory, use -r to recursively namespace files"
+      exit 5
+    end
+  when ->(p) { p.file? }
+    namespace_file(namespace, path)
+  else
+    raise 'Invalid path'
+  end
+end

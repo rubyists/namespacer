@@ -1,0 +1,18 @@
+---
+require:
+  - rubocop-minitest
+  - rubocop-rake
+  - rubocop-performance
+
+AllCops:
+  TargetRubyVersion: 3.3
+  NewCops: enable
+
+Style/StringLiterals:
+  Enabled: true
+
+Style/StringLiteralsInInterpolation:
+  Enabled: true
+
+Layout/LineLength:
+  Max: 120
