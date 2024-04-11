@@ -7,9 +7,9 @@ require 'pry'
 
 # Top-level namespace to keep Rubyists namespaces in isolation
 module Rubyists
-  # Wrap some namespace around top-level AST nodes of 'module' or 'class' type
+  # Namespace for the namespacer tool
   module Namespacer
-    # Do the rewriting with the rewriter class
+    # Do the AST rewriting with the Rewriter class
     class Rewriter < Parser::TreeRewriter
       attr_accessor(:namespaces)
 
@@ -44,6 +44,7 @@ module Rubyists
       end
     end
 
+    # Wrap some namespace around top-level AST nodes of 'module' or 'class' type
     def self.namespace!(string_or_io, namespaces)
       buffer = Parser::Source::Buffer.new("(#{namespaces})")
       buffer.source = string_or_io.is_a?(IO) ? string_or_io.read : string_or_io
@@ -56,5 +57,5 @@ end
 
 if $PROGRAM_NAME == __FILE__
   warn 'Wrapping myself'
-  puts Rubyists::Namespacer.namespace!(File.read(__FILE__), 'Rubyists::Namespacer')
+  puts Rubyists::Namespacer.namespace!(File.read(__FILE__), 'Wrapped::Smoke::Test')
 end
